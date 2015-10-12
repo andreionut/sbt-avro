@@ -1,4 +1,4 @@
-package com.c4soft.sbtavro;
+package me.andreionut.sbtavro;
 
 import java.io.File
 

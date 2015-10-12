@@ -6,8 +6,8 @@ object build extends Build {
         id = "sbt-avro",
         base = file("."),
         settings = Defaults.defaultSettings ++ Seq[Project.Setting[_]](
-            organization := "com.c4soft",
-            version := "1.0.0",
+            organization := "me.andreionut",
+            version := "1.0.1",
             sbtPlugin := true,
             libraryDependencies ++= Seq(
                     "org.apache.avro" % "avro" % "1.7.7",

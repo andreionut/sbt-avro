@@ -1,13 +1,13 @@
 {
     "type": "record",
-    "namespace": "com.c4soft.sbtavro",
+    "namespace": "me.andreionut.sbtavro",
     "name": "A",
     "fields": [{
             "name": "b",
-            "type": "com.c4soft.sbtavro.B"
+            "type": "me.andreionut.sbtavro.B"
         },{
             "name": "c",
-            "type": "com.c4soft.sbtavro.C"
+            "type": "me.andreionut.sbtavro.C"
         }
     ]
 }
