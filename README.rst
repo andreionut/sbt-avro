@@ -4,9 +4,12 @@ sbt-avro
 
 Overview
 ========
-This is a fork of https://github.com/cavorite/sbt-avro
+This is a fork of https://github.com/cavorite/sbt-avro and https://github.com/ch4mpy/sbt-avro
 
-My aim here is to sort avsc files so that type that are re-used are compiled first
+sbt-avro is a plugin for sbt-0.13.0 for generating the Java
+sources for Avro_ schemas and protocols.
+
+.. _Avro: http://avro.apache.org/
 
 Usage
 =====
@@ -16,23 +19,22 @@ Install the plugin
 
 Add the plugin according to the `sbt documentation`_.
 
-.. _`sbt documentation`: https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins
+.. _`sbt documentation`: http://www.scala-sbt.org/0.13/docs/Plugins.html
 
-For instance, add the following lines to the file ``hello/project/build.sbt`` in your
+For instance, add the following lines to the file ``project/plugins.sbt`` in your
 project directory::
 
-    resolvers += "sbt-plugin-releases" at "http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
 
-    addSbtPlugin("com.cavorite" % "sbt-avro" % "0.3.2")
+    addSbtPlugin("me.andreionut" % "sbt-avro" % "1.0.1")
 
 
 Import the plugin settings
 --------------------------
 
 To activate the plugin, import its settings by adding the following lines to 
-your ``hello/build.sbt`` file::
+your ``build.sbt`` file::
 
-    seq( sbtavro.SbtAvro.avroSettings : _*)
+    seq( me.andreionut.SbtAvro.avroSettings : _*)
 
 
 Scope
@@ -59,7 +61,7 @@ Example
 For example, if you want to change the Java type of the string elements in 
 the schema, you can add the following lines to your ``build.sbt``  file: 
     
-    seq( sbtavro.SbtAvro.avroSettings : _*)
+    seq( me.andreionut.SbtAvro.avroSettings : _*)
     
     (stringType in avroConfig) := "String"
 
@@ -82,9 +84,7 @@ more details.
 Credits
 =======
 
-`sbt-avro` is maintained by `Juan Manuel Caicedo`__. I wrote it based on `sbt-protobuf`_
-(even this README file!). This is my first attempt to write an `sbt` plugin,
-so feel free to send your comments and bug reports.
+`sbt-avro` was created by `Juan Manuel Caicedo`__.
 
 Contributors
 ------------
@@ -93,12 +93,14 @@ Contributors
 - `Daniel Lundin`_
 - `Vince Tse`_
 - `Ashwanth Kumar`_
+- `Jerome Wacongne`_
 
 .. _`sbt-protobuf`: https://github.com/gseitz/sbt-protobuf
 .. _`Brennan Saeta`: https://github.com/saeta
 .. _`Daniel Lundin`: https://github.com/dln
 .. _`Vince Tse`: https://github.com/vtonehundred
 .. _`Ashwanth Kumar`: https://github.com/ashwanthkumar
+.. _`Jerome Wacongne`: https://github.com/ch4mpy
 .. __: http://cavorite.com
 
 
