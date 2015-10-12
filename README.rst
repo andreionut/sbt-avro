@@ -50,7 +50,7 @@ Settings
 Name                Name in shell            Default                              Description
 ===============     ====================     ================================     ===============
 sourceDirectory     ``source-directory``     ``src/main/avro``                    Path containing ``*.avsc``, ``*.avdl`` and ``*.avpr`` files.
-javaSource          ``java-source``          ``$sourceManaged/compiled_avro``     Path for the generated ``*.java`` files.
+javaSource          ``java-source``          ``$sourceManaged/compiled_avro``     Path for the generated ``*.java`` files. See Known Bugs section.
 version             ``version``              ``1.7.3``                            Version of the Avro library should be used. A dependency to ``"org.apache.avro" % "avro-compiler" % "$version"`` is automatically added to ``libraryDependencies``.
 stringType          ``string-type``          ``CharSequence``                     Java type for string elements. Possible values: ``CharSequence`` (by default), ``Utf8`` and ``String``.
 ===============     ====================     ================================     ===============
@@ -75,6 +75,10 @@ Name                Name in shell        Description
 generate            generate            Compiles the Avro files. This task is automatically executed everytime the project is compiled.
 ===============     ================    ==================
 
+Known Bugs
+==========
+
+- On ``sbt clean`` the directory set by the ``javaSource`` setting will be erased.
 
 License
 =======
