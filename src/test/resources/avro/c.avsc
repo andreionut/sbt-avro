@@ -1,6 +1,6 @@
 {
-    "type": "record",
     "name": "me.andreionut.sbtavro.C",
+    "type": "record",
     "fields": [{
             "name": "str",
             "type": "string"

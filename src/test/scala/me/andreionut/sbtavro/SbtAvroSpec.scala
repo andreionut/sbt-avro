@@ -13,11 +13,26 @@ import org.specs2.mutable.Specification
 class SbtAvroSpec extends Specification {
   val sourceDir = new File(getClass.getClassLoader.getResource("avro").toURI)
   val targetDir = new File(sourceDir.getParentFile, "generated")
-  val sourceFiles = Seq(new File(sourceDir, "a.avsc"), new File(sourceDir, "b.avsc"), new File(sourceDir, "c.avsc"))
+  val sourceFiles = Seq(
+    new File(sourceDir, "a.avsc"),
+    new File(sourceDir, "b.avsc"),
+    new File(sourceDir, "c.avsc"),
+    new File(sourceDir, "d.avsc")
+  )
 
   "Schema files should be sorted with re-used types schemas first, whatever input order" >> {
-    SbtAvro.sortSchemaFiles(sourceFiles) must beEqualTo(Seq(new File(sourceDir, "c.avsc"), new File(sourceDir, "b.avsc"), new File(sourceDir, "a.avsc")))
-    SbtAvro.sortSchemaFiles(sourceFiles.reverse) must beEqualTo(Seq(new File(sourceDir, "c.avsc"), new File(sourceDir, "b.avsc"), new File(sourceDir, "a.avsc")))
+    SbtAvro.sortSchemaFiles(sourceFiles) must beEqualTo(Seq(
+      new File(sourceDir, "d.avsc"),
+      new File(sourceDir, "c.avsc"),
+      new File(sourceDir, "b.avsc"),
+      new File(sourceDir, "a.avsc")
+    ))
+    SbtAvro.sortSchemaFiles(sourceFiles.reverse) must beEqualTo(Seq(
+      new File(sourceDir, "d.avsc"),
+      new File(sourceDir, "b.avsc"),
+      new File(sourceDir, "c.avsc"),
+      new File(sourceDir, "a.avsc")
+    ))
   }
 
   "It should be possible to compile types depending on others if source files are provided in right order" >> {
