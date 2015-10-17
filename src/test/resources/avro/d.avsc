@@ -1,0 +1,10 @@
+{
+    "name": "D",
+    "type": "record",
+    "namespace": "me.andreionut.sbtavro",
+    "fields": [{
+        "name": "str",
+        "type": "string"
+    }
+    ]
+}

@@ -1,10 +1,10 @@
 {
-    "type": "record",
-    "namespace": "me.andreionut.sbtavro",
     "name": "B",
+    "namespace": "me.andreionut.sbtavro",
+    "type": "record",
     "fields": [{
-            "name": "c",
-            "type": "me.andreionut.sbtavro.C"
+            "name": "d",
+            "type": "me.andreionut.sbtavro.D"
         }
     ]
 }

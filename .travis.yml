@@ -1,0 +1,15 @@
+# http://docs.travis-ci.com/user/languages/scala/
+language: scala
+
+scala:
+  - 2.11.7
+
+jdk:
+  - oraclejdk8
+
+cache:
+  directories:
+    - $HOME/.ivy2
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean test
