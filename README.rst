@@ -61,7 +61,7 @@ Example
 For example, if you want to change the Java type of the string elements in 
 the schema, you can add the following lines to your ``build.sbt``  file: 
     
-    seq( me.andreionut.SbtAvro.avroSettings : _*)
+    seq( me.andreionut.sbtavro.SbtAvro.avroSettings : _*)
     
     (stringType in avroConfig) := "String"
 
