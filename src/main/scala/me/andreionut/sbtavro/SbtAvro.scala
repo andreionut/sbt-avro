@@ -31,7 +31,6 @@ import sbt.toGroupID
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.io.Source
 import scala.util.Try
 
 import scalax.collection.Graph
@@ -127,7 +126,11 @@ object SbtAvro extends Plugin {
     val nameToSchema: mutable.Map[String, SchemaDetails] = mutable.Map()
     schemas.foreach(s => nameToSchema(s.name) = s)
     val graph: Graph[String, DiEdge] = createDependencyGraph(schemas)
-    graph.topologicalSort.map(n => nameToSchema(n).fileName)
+    if (graph.isAcyclic) {
+      graph.topologicalSort.map(n => nameToSchema(n).fileName)
+    } else {
+      throw new Exception(s"Circular dependency found in the Avro schema files! ${graph.findCycle.get.toString}")
+    }
   }
 
   def readSchema(file: File): SchemaDetails = {
@@ -136,14 +139,22 @@ object SbtAvro extends Plugin {
     val namespace: String = Try(json.read[String]("namespace")).getOrElse("")
     val dependsOn: mutable.Set[String] = mutable.Set()
     json.read[JSONArray]("$.fields..type").toArray.map {
-      case name: String => if (!isPrimitive(name)) { dependsOn.add(name) }
-      case names: JSONArray => names.foreach(i => if (!isPrimitive(name)) {dependsOn.add(i.toString)})
+      case name: String => if (!isPrimitive(name)) { dependsOn.add(getFullName(name, namespace)) }
+      case names: JSONArray => names.foreach(i => if (!isPrimitive(i.toString)) {dependsOn.add(getFullName(i.toString, namespace))})
     }
-    SchemaDetails(file, namespace, name, dependsOn.toSet)
+    SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet)
   }
 
   def isPrimitive(name: String): Boolean = {
     avroPrimitives(name)
+  }
+
+  def getFullName(name: String, namespace: String): String = {
+    if (name.contains(".")){
+      name
+    } else {
+      namespace + "." + name
+    }
   }
 
   def createDependencyGraph(schemas: Iterable[SchemaDetails]): Graph[String, DiEdge] = {
