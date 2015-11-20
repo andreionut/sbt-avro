@@ -1,13 +1,16 @@
 {
     "type": "record",
     "namespace": "me.andreionut.sbtavro",
-    "name": "A",
+    "name": "F",
     "fields": [{
             "name": "b",
             "type": "me.andreionut.sbtavro.B"
         },{
-            "name": "c",
-            "type": "me.andreionut.sbtavro.C"
+            "name": "cd",
+            "type": [
+                "me.andreionut.sbtavro.C",
+                "me.andreionut.sbtavro.D"
+            ]
         }
     ]
 }
