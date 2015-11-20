@@ -1,5 +1,6 @@
 {
     "name": "me.andreionut.sbtavro.C",
+//    "namespace": "me.andreionut.sbtavro",
     "type": "record",
     "fields": [{
             "name": "str",

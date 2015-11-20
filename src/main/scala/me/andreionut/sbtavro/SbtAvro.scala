@@ -1,7 +1,9 @@
-package me.andreionut.sbtavro;
+package me.andreionut.sbtavro
 
 import java.io.File
 
+import com.jayway.jsonpath.JsonPath
+import net.minidev.json.JSONArray
 import org.apache.avro.Protocol
 import org.apache.avro.Schema
 import org.apache.avro.compiler.idl.Idl
@@ -13,20 +15,7 @@ import sbt.Compile
 import sbt.ConfigKey.configurationToKey
 import sbt.FileFunction
 import sbt.FilesInfo
-import sbt.Keys.cacheDirectory
-import sbt.Keys.classpathTypes
-import sbt.Keys.cleanFiles
-import sbt.Keys.ivyConfigurations
-import sbt.Keys.javaSource
-import sbt.Keys.libraryDependencies
-import sbt.Keys.managedClasspath
-import sbt.Keys.managedSourceDirectories
-import sbt.Keys.sourceDirectory
-import sbt.Keys.sourceGenerators
-import sbt.Keys.sourceManaged
-import sbt.Keys.streams
-import sbt.Keys.update
-import sbt.Keys.version
+import sbt.Keys._
 import sbt.Logger
 import sbt.Plugin
 import sbt.Scoped.t2ToTable2
@@ -40,13 +29,24 @@ import sbt.richFile
 import sbt.singleFileFinder
 import sbt.toGroupID
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Try
+
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiEdge
+import scalax.collection.GraphPredef._
+
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
  * Simple plugin for generating the Java sources for Avro schemas and protocols.
  */
 object SbtAvro extends Plugin {
+  val avroPrimitives = Set("null", "boolean", "int", "long", "float", "double", "bytes", "string")
+
   val avroConfig = config("avro")
 
   val stringType = SettingKey[String]("string-type", "Type for representing strings. " +
@@ -76,10 +76,10 @@ object SbtAvro extends Plugin {
     ivyConfigurations += avroConfig)
 
   private def compile(srcDir: File, target: File, log: Logger, stringTypeName: String, fieldVisibilityName: String) = {
-    val stringType = StringType.valueOf(stringTypeName);
-    log.info("Avro compiler using stringType=%s".format(stringType));
+    val stringType = StringType.valueOf(stringTypeName)
+    log.info("Avro compiler using stringType=%s".format(stringType))
 
-    val schemaParser = new Schema.Parser();
+    val schemaParser = new Schema.Parser()
 
     for (idl <- (srcDir ** "*.avdl").get) {
       log.info("Compiling Avro IDL %s".format(idl))
@@ -122,51 +122,57 @@ object SbtAvro extends Plugin {
         cachedCompile((srcDir ** "*.av*").get.toSet).toSeq
     }
 
-  def sortSchemaFiles(files: Traversable[File]): Seq[File] = {
-    val reversed = mutable.MutableList.empty[File]
-    var used: Traversable[File] = files
-    while(!used.isEmpty) {
-      val usedUnused = usedUnusedSchemas(used)
-      reversed ++= usedUnused._2
-      used = usedUnused._1
+  def sortSchemaFiles(files: Iterable[File]): List[File] = {
+    val schemas: Iterable[SchemaDetails] = files.map(readSchema)
+    val nameToSchema: mutable.Map[String, SchemaDetails] = mutable.Map()
+    schemas.foreach(s => nameToSchema(s.name) = s)
+    val graph: Graph[String, DiEdge] = createDependencyGraph(schemas)
+    graph.topologicalSort.map(n => nameToSchema(n).fileName)
+  }
+
+  def readSchema(file: File): SchemaDetails = {
+    val json = JsonPath.parse(file)
+    val name: String = Try(json.read[String]("name")).getOrElse("")
+    val namespace: String = Try(json.read[String]("namespace")).getOrElse("")
+    val dependsOn: mutable.Set[String] = mutable.Set()
+    json.read[JSONArray]("$.fields..type").toArray.map {
+      case name: String => if (!isPrimitive(name)) { dependsOn.add(name) }
+      case names: JSONArray => names.foreach(i => if (!isPrimitive(name)) {dependsOn.add(i.toString)})
     }
-    reversed.reverse.toSeq
+    SchemaDetails(file, namespace, name, dependsOn.toSet)
   }
 
-  def strContainsType(str: String, fullName: String): Boolean = {
-    val typeRegex = "\\\"type\\\"\\s*:\\s*\\\"" + fullName + "\\\""
-    typeRegex.r.findFirstIn(str).isDefined
+  def isPrimitive(name: String): Boolean = {
+    avroPrimitives(name)
   }
 
-  def usedUnusedSchemas(files: Traversable[File]): (Traversable[File], Traversable[File]) = {
-    val usedUnused = files.map { f =>
-      val fullName = extractFullName(f)
-      (f, files.count { candidate => strContainsType(fileText(candidate), fullName) } )
-    }.partition(_._2 > 0)
-    (usedUnused._1.map(_._1), usedUnused._2.map(_._1))
+  def createDependencyGraph(schemas: Iterable[SchemaDetails]): Graph[String, DiEdge] = {
+    @tailrec
+    def createGraph(schemas: Iterable[SchemaDetails], graph: Graph[String, DiEdge]): Graph[String, DiEdge] = {
+      if (schemas.isEmpty) {
+        graph
+      } else {
+        val schema::remainingSchemas = schemas
+        if (schema.dependsOn.isEmpty) {
+          createGraph(remainingSchemas, graph + schema.name)
+        } else {
+          val nodes = schema.dependsOn.map{ name => name ~> schema.name }
+          createGraph(remainingSchemas, addNodes(graph, nodes))
+        }
+      }
+    }
+    createGraph(schemas, Graph())
   }
 
-  def extractFullName(f: File): String = {
-    val txt = fileText(f)
-    val namespace = namespaceRegex.findFirstMatchIn(txt)
-    val name = nameRegex.findFirstMatchIn(txt)
-    if(namespace == None) {
-      return name.get.group(1)
+  @tailrec
+  def addNodes(graph: Graph[String, DiEdge], nodes: Set[DiEdge[String]]): Graph[String, DiEdge] = {
+    if (nodes.isEmpty) {
+      graph
     } else {
-      return s"${namespace.get.group(1)}.${name.get.group(1)}"
+      val node = nodes.head
+      addNodes(graph + node, nodes - node)
     }
   }
-
-  def fileText(f: File): String = {
-    val src = Source.fromFile(f)
-    try {
-      return src.getLines.mkString
-    } finally {
-      src.close()
-    }
-  }
-
-  val namespaceRegex = "\\\"namespace\\\"\\s*:\\s*\"([^\\\"]+)\\\"".r
-  val nameRegex = "\\\"name\\\"\\s*:\\s*\"([^\\\"]+)\\\"".r
-
 }
+
+case class SchemaDetails(fileName: File, namespace: String, name: String, dependsOn: Set[String])

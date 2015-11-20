@@ -3,11 +3,15 @@ organization := "me.andreionut"
 description := "Sbt plugin for compiling Avro sources"
 version := "1.0.1"
 
+scalaVersion := "2.10.6"
+
 sbtPlugin := true
 
 libraryDependencies ++= Seq(
   "org.apache.avro" % "avro" % "1.7.7",
   "org.apache.avro" % "avro-compiler" % "1.7.7",
+  "com.assembla.scala-incubator" % "graph-core_2.10" % "1.9.1",
+  "com.jayway.jsonpath" % "json-path" % "2.0.0",
   "org.specs2" %% "specs2-core" % "3.6.4" % "test"
 )
 

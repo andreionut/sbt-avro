@@ -1,6 +1,6 @@
 {
-    "name": "B",
-    "namespace": "me.andreionut.sbtavro",
+    "name": "me.andreionut.sbtavro.B",
+//    "namespace": "me.andreionut.sbtavro",
     "type": "record",
     "fields": [{
             "name": "d",
