@@ -19,7 +19,16 @@ class SbtAvroSpec extends Specification {
     new File(sourceDir, "d.avsc")
   )
 
-  // TODO Unit test individual functions, like readSchema, createDependencyGraph
+  "It should return the correct SchemaDetails" >> {
+    val file = new File(sourceDir, "b.avsc")
+    val namespace = "me.andreionut.sbtavro"
+    val name = "B"
+    val schemaDetails = SbtAvro.readSchema(file)
+    schemaDetails.file mustEqual file
+    schemaDetails.name mustEqual s"$namespace.$name"
+    schemaDetails.namespace mustEqual namespace
+    schemaDetails.dependsOn mustEqual Set("me.andreionut.sbtavro.D")
+  }
 
   "It should be possible to compile types depending on others" >> {
     sourceFiles.permutations.foreach(testOrdering)

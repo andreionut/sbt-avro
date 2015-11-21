@@ -127,7 +127,7 @@ object SbtAvro extends Plugin {
     schemas.foreach(s => nameToSchema(s.name) = s)
     val graph: Graph[String, DiEdge] = createDependencyGraph(schemas)
     if (graph.isAcyclic) {
-      graph.topologicalSort.map(n => nameToSchema(n).fileName)
+      graph.topologicalSort.map(n => nameToSchema(n).file)
     } else {
       throw new Exception(s"Circular dependency found in the Avro schema files! ${graph.findCycle.get.toString}")
     }
@@ -138,12 +138,13 @@ object SbtAvro extends Plugin {
     val name: String = json.read[String]("name")
     val namespace: String = Try(json.read[String]("namespace")).getOrElse("")
     val dependsOn: mutable.Set[String] = mutable.Set()
-    json.read[JSONArray]("$.fields..type").toArray.map {
-      case name: String => if (!isPrimitive(name)) { dependsOn.add(getFullName(name, namespace)) }
-      case names: JSONArray => names.foreach(i => if (!isPrimitive(i.toString)) {dependsOn.add(getFullName(i.toString, namespace))})
-      case map: java.util.LinkedHashMap[String, Any] => map.get("type") match {
-        case kind if Seq("array", "map").contains(kind) => dependsOn.add(getFullName(map.get("items").toString, namespace))
-        case _ => ""
+    val addDependency: String => Unit = { c => if (!isPrimitive(c)) {dependsOn.add(getFullName(c, namespace))} }
+    json.read[JSONArray]("$.fields..type").toArray.foreach {
+      case name: String => addDependency(name)
+      case names: JSONArray => names.foreach(i => addDependency(i.toString))
+      case map: java.util.LinkedHashMap[String, _] => map.get("type") match {
+        case kind if Seq("array", "map").contains(kind) => addDependency(map.get("items").toString)
+        case _ => None
       }
     }
     SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet - "")
@@ -190,4 +191,4 @@ object SbtAvro extends Plugin {
   }
 }
 
-case class SchemaDetails(fileName: File, namespace: String, name: String, dependsOn: Set[String])
+case class SchemaDetails(file: File, namespace: String, name: String, dependsOn: Set[String])
