@@ -9,9 +9,6 @@ import org.specs2.mutable.Specification
 
 import scala.util.Random
 
-/**
- * Created by jeromewacongne on 06/08/2015.
- */
 class SbtAvroSpec extends Specification {
   val sourceDir = new File(getClass.getClassLoader.getResource("avro").toURI)
   val targetDir = new File(sourceDir.getParentFile, "generated")
@@ -21,6 +18,8 @@ class SbtAvroSpec extends Specification {
     new File(sourceDir, "c.avsc"),
     new File(sourceDir, "d.avsc")
   )
+
+  // TODO Unit test individual functions, like readSchema, createDependencyGraph
 
   "It should be possible to compile types depending on others" >> {
     sourceFiles.permutations.foreach(testOrdering)

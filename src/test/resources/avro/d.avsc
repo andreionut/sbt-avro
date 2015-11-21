@@ -4,7 +4,6 @@
     "namespace": "me.andreionut.sbtavro",
     "fields": [{
         "name": "str",
-        "type": "string"
-    }
-    ]
+        "type": {"type": "array", "items": "C"}
+    }]
 }

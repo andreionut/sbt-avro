@@ -3,8 +3,14 @@
     "namespace": "me.andreionut.sbtavro",
     "type": "record",
     "fields": [{
-            "name": "d",
-            "type": "me.andreionut.sbtavro.D"
-        }
-    ]
+      "name": "test",
+      "type": {
+        "type" : "record",
+        "name": "custom",
+        "fields" : [
+          {"name": "a", "type": "long"},
+          {"name": "d", "type": "me.andreionut.sbtavro.D"}
+        ]
+      }
+    }]
 }

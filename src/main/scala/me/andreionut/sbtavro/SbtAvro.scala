@@ -44,7 +44,7 @@ import scala.collection.JavaConverters._
  * Simple plugin for generating the Java sources for Avro schemas and protocols.
  */
 object SbtAvro extends Plugin {
-  val avroPrimitives = Set("null", "boolean", "int", "long", "float", "double", "bytes", "string")
+  final val avroPrimitives = Set("null", "boolean", "int", "long", "float", "double", "bytes", "string", "record", "enum", "array", "map", "fixed")
 
   val avroConfig = config("avro")
 
@@ -135,14 +135,18 @@ object SbtAvro extends Plugin {
 
   def readSchema(file: File): SchemaDetails = {
     val json = JsonPath.parse(file)
-    val name: String = Try(json.read[String]("name")).getOrElse("")
+    val name: String = json.read[String]("name")
     val namespace: String = Try(json.read[String]("namespace")).getOrElse("")
     val dependsOn: mutable.Set[String] = mutable.Set()
     json.read[JSONArray]("$.fields..type").toArray.map {
       case name: String => if (!isPrimitive(name)) { dependsOn.add(getFullName(name, namespace)) }
       case names: JSONArray => names.foreach(i => if (!isPrimitive(i.toString)) {dependsOn.add(getFullName(i.toString, namespace))})
+      case map: java.util.LinkedHashMap[String, Any] => map.get("type") match {
+        case kind if Seq("array", "map").contains(kind) => dependsOn.add(getFullName(map.get("items").toString, namespace))
+        case _ => ""
+      }
     }
-    SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet)
+    SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet - "")
   }
 
   def isPrimitive(name: String): Boolean = {
