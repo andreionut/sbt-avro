@@ -5,6 +5,21 @@ sbt-avro
 Changelog
 =========
 
+1.1.0
+-----
+
+*2015-11-23*
+
+Overhaul of the schema sorting based on dependency graphs and topological sort.
+
+1.0.1
+-----
+
+*2015-10-12*
+
+Sort the schema files before compilation. Thanks to Jerome Wacongne
+
+
 0.3.2
 -----
 
