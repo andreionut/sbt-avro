@@ -1,7 +1,7 @@
 name := "sbt-avro"
 organization := "me.andreionut"
 description := "Sbt plugin for compiling Avro sources"
-version := "1.1.0"
+version := "1.1.1"
 
 scalaVersion := "2.10.6"
 

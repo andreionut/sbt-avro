@@ -160,7 +160,8 @@ object SbtAvro extends Plugin {
       if (schemas.isEmpty) {
         graph
       } else {
-        val schema::remainingSchemas = schemas
+        val schema = schemas.head
+        val remainingSchemas = schemas.tail
         if (schema.dependsOn.isEmpty) {
           createGraph(remainingSchemas, graph + schema.name)
         } else {
