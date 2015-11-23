@@ -124,7 +124,7 @@ object SbtAvro extends Plugin {
   def sortSchemaFiles(files: Iterable[File]): List[File] = {
     val schemas: Iterable[SchemaDetails] = files.map(readSchema)
     val nameToSchema: mutable.Map[String, SchemaDetails] = mutable.Map()
-    schemas.foreach(s => nameToSchema(s.name) = s)
+    schemas.foreach(s => nameToSchema.put(s.name, s))
     val graph: Graph[String, DiEdge] = createDependencyGraph(schemas)
     if (graph.isAcyclic) {
       graph.topologicalSort.map(n => nameToSchema(n).file)
@@ -142,27 +142,19 @@ object SbtAvro extends Plugin {
     json.read[JSONArray]("$.fields..type").toArray.foreach {
       case name: String => addDependency(name)
       case names: JSONArray => names.foreach(i => addDependency(i.toString))
-      case map: java.util.LinkedHashMap[String, _] => map.get("type") match {
+      case map: java.util.Map[String, _] => map.get("type") match {
         case kind if Seq("array", "map").contains(kind) => addDependency(map.get("items").toString)
         case _ => None
       }
     }
-    SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet - "")
+    SchemaDetails(file, namespace, getFullName(name, namespace), dependsOn.toSet)
   }
 
-  def isPrimitive(name: String): Boolean = {
-    avroPrimitives(name)
-  }
+  protected def isPrimitive(name: String): Boolean = avroPrimitives(name)
 
-  def getFullName(name: String, namespace: String): String = {
-    if (name.contains(".")){
-      name
-    } else {
-      namespace + "." + name
-    }
-  }
+  protected def getFullName(name: String, namespace: String): String = if (name.contains(".")) name else namespace + "." + name
 
-  def createDependencyGraph(schemas: Iterable[SchemaDetails]): Graph[String, DiEdge] = {
+  protected def createDependencyGraph(schemas: Iterable[SchemaDetails]): Graph[String, DiEdge] = {
     @tailrec
     def createGraph(schemas: Iterable[SchemaDetails], graph: Graph[String, DiEdge]): Graph[String, DiEdge] = {
       if (schemas.isEmpty) {
@@ -181,12 +173,11 @@ object SbtAvro extends Plugin {
   }
 
   @tailrec
-  def addNodes(graph: Graph[String, DiEdge], nodes: Set[DiEdge[String]]): Graph[String, DiEdge] = {
+  protected def addNodes(graph: Graph[String, DiEdge], nodes: Set[DiEdge[String]]): Graph[String, DiEdge] = {
     if (nodes.isEmpty) {
       graph
     } else {
-      val node = nodes.head
-      addNodes(graph + node, nodes - node)
+      addNodes(graph + nodes.head, nodes.tail)
     }
   }
 }
