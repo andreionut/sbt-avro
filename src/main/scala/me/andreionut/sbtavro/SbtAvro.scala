@@ -138,7 +138,7 @@ object SbtAvro extends Plugin {
     val name: String = json.read[String]("name")
     val namespace: String = Try(json.read[String]("namespace")).getOrElse("")
     val dependsOn: mutable.Set[String] = mutable.Set()
-    val addDependency: String => Unit = { c => if (!isPrimitive(c)) {dependsOn.add(getFullName(c, namespace))} }
+    val addDependency = (c: String) => if (!isPrimitive(c)) dependsOn.add(getFullName(c, namespace))
     json.read[JSONArray]("$.fields..type").toArray.foreach {
       case name: String => addDependency(name)
       case names: JSONArray => names.foreach(i => addDependency(i.toString))
